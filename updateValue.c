@@ -1,31 +1,25 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "driver/gpio.h"
-#include "driver/adc.h"
-#include "esp_adc_cal.h"
 #include "updateValue.h"
-#include "sdkconfig.h"
 
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
 
- esp_adc_cal_characteristics_t *adc_chars;
+esp_adc_cal_characteristics_t *adc_chars;
 
- const adc_channel_t fsr1Channel = ADC1_CHANNEL_4;            //Pin32
- const adc_channel_t fsr2Channel = ADC1_CHANNEL_5;            //Pin33
- const adc_channel_t utsChannel = ADC1_CHANNEL_6;             //PinA2
+const adc_channel_t fsr1Channel = ADC1_CHANNEL_4;        //Pin32
+const adc_channel_t fsr2Channel = ADC1_CHANNEL_5;        //Pin33
+const adc_channel_t utsChannel = ADC1_CHANNEL_6;         //PinA2
 
- const adc_atten_t atten = ADC_ATTEN_DB_0;
- const adc_unit_t unit = ADC_UNIT_1;
+const adc_atten_t atten = ADC_ATTEN_DB_0;
+const adc_unit_t unit = ADC_UNIT_1;
 
 int fsr1Value;
- int fsr2Value;
- int utsValue;
+int fsr2Value;
+int usdsValue;
 
- int fsr1MaxValue;
- int fsr2MaxValue;
+int fsr1MaxValue;
+int fsr2MaxValue;
+int fsr1Threshold;
+int fsr2Threshold
 
 
 // int calibrationValue[2];
@@ -55,16 +49,16 @@ int fsr1Value;
     print_char_val_type(val_type);
 }
 
- void check_efuse(void)
+ void checkEfuse(void)
 {
     //Check TP is burned into eFuse
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+    if (esp_adc_cal_checkEfuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
         printf("eFuse Two Point: Supported\n");
     } else {
         printf("eFuse Two Point: NOT supported\n");
     }
     //Check Vref is burned into eFuse
-    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
+    if (esp_adc_cal_checkEfuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
         printf("eFuse Vref: Supported\n");
     } else {
         printf("eFuse Vref: NOT supported\n");
@@ -122,7 +116,7 @@ int fsr1Value;
     uint32_t voltage = esp_adc_cal_raw_to_voltage(uts_reading, adc_chars);
     printf("USS reading     --> Raw: %d\tVoltage: %dmV\n", uts_reading, voltage);
     vTaskDelay(pdMS_TO_TICKS(1000));
-    utsValue = (float)uts_reading;
+    usdsValue = (float)uts_reading;
     }
 
 
@@ -133,9 +127,14 @@ int fsr1Value;
     fsr1MaxValue = fsr1Value;
     fsr2MaxValue = fsr2Value;
 
+    fsr1Threshold = 0.6*fsr1MaxValue;
+    fsr2Threshold = 0.6*fsr2MaxValue;
+
+    sitUpTriggerDistance = 
+
 }
 
-void sensor_read(void)
+void sensorRead(void)
 {
 
     fsr1Read();
